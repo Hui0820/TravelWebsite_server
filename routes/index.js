@@ -3,6 +3,7 @@ var router = express.Router();
 var multer = require("multer");
 var path = require('path');
 var fs = require("fs");
+var async = require("async");
 
 const md5 = require('blueimp-md5');
 const {UserModel, PostModel} = require('../db/models');
@@ -18,7 +19,6 @@ const filter = {
 router.get('/', function (req, res, next) {
 	res.render('index', {title: 'Express'});
 });
-
 
 //API for register
 router.post('/register', (req, res) => {
@@ -36,7 +36,6 @@ router.post('/register', (req, res) => {
 				res.cookie('userid', user._id, {
 					maxAge: 1000 * 60 * 60 * 24
 				});
-
 				const userData = {
 					username,
 					email,
@@ -101,7 +100,8 @@ router.post('/post', (req, res) => {
 			views: postDoc.views,
 			likes:postDoc.likes,
 			comments: postDoc.comments
-		}
+    }
+    
 		UserModel.findById(userid,(err,userDoc)=>{
 			resPostData['username'] = userDoc.username;
 			resPostData['email'] = userDoc.email;
@@ -190,4 +190,87 @@ router.post('/updateAva', (req, res) => {
 	})
 })
 
+//Api for all the post data
+router.get('/fetchAll',(req,res)=>{   
+  PostModel.find({}).sort({'post_time':-1}).exec((err,postDocs)=>{
+			processArray(postDocs,res);
+  })
+})
+
+
+//Api for get the article of specifical id
+router.get('/detail/:id',(req,res)=>{
+	let post_id = req.params.id;
+	
+	PostModel.findOne({_id:post_id},(err,postDoc)=>{
+		getOneUserData(postDoc,res);	
+	})	
+})
+
 module.exports = router;
+
+
+
+
+//====================functions below ========================
+
+//handle all posts data including users info
+async function processArray(postDocs,res){
+	let newCardList =[];
+		for(let item of postDocs){
+			usrData = await processUserDoc(item.user_id);
+			const newCard={
+				user_id: item.user_id,
+				post_id: item._id,
+				cover_imgURL: item.post_imgURLs[0],
+				post_title: item.post_title,
+				post_tags: item.post_tags,
+				post_content: item.post_content,
+				post_time: item.post_time,
+				views: item.views,
+				likes:	item.likes,
+				comments: item.comments,
+				username:usrData.username,
+				avatar:usrData.avatar,
+				email:usrData.email
+			}
+			newCardList.push(newCard);
+		}
+		console.log(newCardList);
+		res.send({code:1,data:newCardList});
+}
+
+//handle a article detail including user info
+async function getOneUserData(postDoc,res){
+	const userDoc = await processUserDoc(postDoc.user_id);
+	let articleData ={
+			user_id: postDoc.user_id,
+			post_id: postDoc._id,
+			cover_imgURL: postDoc.post_imgURLs[0],
+			post_title: postDoc.post_title,
+			post_tags: postDoc.post_tags,
+			post_content: postDoc.post_content,
+			post_time: postDoc.post_time,
+			views: postDoc.views,
+			likes:	postDoc.likes,
+			comments: postDoc.comments,
+			username:userDoc.username,
+			avatar:userDoc.avatar,
+			email:userDoc.email
+	};
+	console.log(articleData);
+	res.send(articleData);
+}
+
+async function processUserDoc(userId){
+	let UserData = await getUser(userId);
+	return UserData;
+}
+
+function getUser(userId){
+	return new Promise((resolve,reject)=>{
+		UserModel.findOne({_id: userId},(err,userDoc)=>{
+				resolve(userDoc);
+		})
+	})
+}
