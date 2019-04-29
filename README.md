@@ -32,7 +32,7 @@ Here is <u>*the server side*</u>, which is used to design `RESTful API` for the 
 
 ------
 
-##### Prerequisites
+#### Prerequisites
 
 The project runs in [Nodejs](<https://nodejs.org/en/>) environment. it requires:
 
@@ -42,7 +42,7 @@ The project runs in [Nodejs](<https://nodejs.org/en/>) environment. it requires:
 
 
 
-##### Installing
+#### Installing
 
 > Note: The server project needs to work with [travel website client](https://github.com/Hui0820/TravelWebsite_client) , Please make sure MongoDB service is running.
 
@@ -57,7 +57,7 @@ the development mode will be running at `localhost:3001`
 
 
 
-##### Deploying
+#### Deploying
 
 Step 1: In the [travel website client](https://github.com/Hui0820/TravelWebsite_client) project, using the following to build the whole client side package into a `build` directory.
 
@@ -81,7 +81,7 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 
 
-##### Testing
+#### Testing
 
 Test the whole project at `localhost:3000 or localhost:3001`
 
